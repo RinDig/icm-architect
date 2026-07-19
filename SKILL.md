@@ -74,13 +74,15 @@ Real workspaces mix forms (a record library whose records are mini knowledge bun
 - **Contract** — describes how a step works (becomes a `CONTEXT.md`)
 - **Factory** — stable reference (→ `_shared/`, `_system/`, or `references/`)
 - **Product** — run-specific artifacts (→ stage `output/` or record folders)
-- **Dead** — stale, duplicated, or superseded (→ propose `_archive/`, never silently delete)
+- **Dead** — stale, duplicated, or superseded (→ propose `_archive/`, never silently delete). *A file is Dead only after step 4 confirms nothing depends on it — apparent disuse is not proof.*
 
-**4. Propose before moving.** Present the target tree and a migration map (old path → new path → role). Get approval. This is a human gate in a method built on human gates — honor it.
+**4. Verify reference integrity — before proposing.** Apparent disuse is not proof of safety: a file with no obvious references can still be load-bearing for a live script, a sibling folder, or a system *outside* this workspace. Before any file is proposed for a move — especially a `Dead → _archive/` move — enumerate what actually points at it across four scopes: **in-vault**, **sibling-path** (`../`), **symlink**, and **external/cross-boundary** (other repos or systems that hardcode paths in). This doesn't add a role — it flags a move: any file with a live referrer is **held** (not moved), or moved only if every referrer is updated in the same change. A file can't be classified Dead until this comes back clean. This is impact analysis — it turns the approval gate in step 5 from a guess into an informed decision. See [references/reference-integrity.md](references/reference-integrity.md).
 
-**5. Migrate.** Move files, write the entry file and contracts, de-duplicate toward one-home-per-fact (leave a link where the copy lived if anything might reference it). Separate method from instance: if the structure will be reused elsewhere, the blank template lives apart from this filled-in deployment.
+**5. Propose before moving.** Present the target tree and a migration map (old path → new path → role → *referrers found*). Get approval. This is a human gate in a method built on human gates — honor it. The reviewer approves against the reference report from step 4, not against a hunch.
 
-**6. Validate with the walk test.**
+**6. Migrate — copy, verify, then remove.** Never move-and-hope. Copy to the new home, verify parity (file count and content hash) against the source, and only then remove the original. Write the entry file and contracts, de-duplicate toward one-home-per-fact (leave a link where the copy lived if anything referenced it). Separate method from instance: if the structure will be reused elsewhere, the blank template lives apart from this filled-in deployment.
+
+**7. Validate with the walk test.**
 
 ## The walk test
 
@@ -91,6 +93,7 @@ Validate any ICM — new or restructured — by walking it cold, as an agent wit
 - Can you state pipeline status purely by scanning what exists in `output/` folders (or node frontmatter)?
 - Is any routing file carrying content payload? Move the payload to a shelf; leave a pointer.
 - Is any fact stored in two places? Pick one home; link from the other.
+- After a restructure: does every reference that existed *before* the move still resolve? A moved file that something still points at is a break, not a tidy-up — no orphaned references, no dangling links, inside the vault or out.
 - Token check: entry file + one contract + its inputs should land in roughly 2k–8k tokens.
 - System map only: can a cold agent answer *what is X* and *what else moves if I change X* from `map/CLAUDE.md` plus one card? Extra checks are in [references/system-map.md](references/system-map.md).
 
@@ -107,4 +110,5 @@ If a step fails, fix the structure — not by explaining more, but by moving or 
 - [references/core.md](references/core.md) — the five design principles, the five-layer context hierarchy, naming conventions, token discipline. Read when writing contracts or when a structural call is contested.
 - [references/forms.md](references/forms.md) — the six forms in depth: skeletons, moves, failure modes. Read at step 2 of Build mode or step 2 of Restructure mode.
 - [references/system-map.md](references/system-map.md) — audit pipeline for the System map form. Read when that form is chosen.
+- [references/reference-integrity.md](references/reference-integrity.md) — the reference-integrity gate: the four reference scopes, the "presence is not position" principle, and copy-verify-parity-then-remove. Read at step 4 of Restructure mode, or any time a move is contested.
 - [assets/templates/](assets/templates/) — copyable starters: `CLAUDE.md`, workspace `CONTEXT.md`, `stage-CONTEXT.md`, `node.md`, `object.md`, `process.md`, `schema.md`, `questionnaire.md`.
