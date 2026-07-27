@@ -36,6 +36,7 @@ workspace/
 - Handoff = one stage's `output/` is the next stage's input. A human edits the file in between; the next stage reads whatever is there.
 - Each contract carries a "load this / do NOT load that" inputs table.
 - `status` is answered by scanning `stages/*/output/` for files.
+- Independent stages share a number and differ by letter (`02a_`, `02b_`); the stage after them is a join that names all of them in its inputs. Fan only where the work is genuinely unordered, and only two to four wide — the gate is a person's attention, not the machine's. See *Parallel stages and the join* in core.md.
 - Stage boundaries sit where the human naturally pauses to check — surfacing the judgment call (an outline, a structural plan) as an editable file *before* the expensive downstream work is the whole trick. Correction is cheapest at the earliest gate.
 
 **Expect a U-curve of human editing:** heavy at the first stage (direction-setting), light in the middle (constrained by both anchors), heavy at the last (aligning output with earlier decisions). Design the first and last outputs to be especially easy to edit.

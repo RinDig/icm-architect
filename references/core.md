@@ -2,7 +2,7 @@
 
 The canon, distilled from the ICM paper (arXiv:2603.16021) and production workspaces. Read this when writing contracts, arguing a structural call, or checking a workspace against the method.
 
-Contents: Five principles · Five-layer hierarchy · Stage contract format · Naming conventions · Library rules · Token discipline · Where ICM loses
+Contents: Five principles · Five-layer hierarchy · Stage contract format · Parallel stages and the join · Naming conventions · Library rules · Token discipline · Where ICM loses
 
 ## The five design principles
 
@@ -59,9 +59,32 @@ Read the draft aloud. Verify the argument order survived from research. Edit in 
 
 Rules: inputs are exact paths, split working vs reference. The process is numbered and short — constraints live in L3 files, not restated here. Exactly one human check, stated as something a person does, not a vague "review."
 
+## Parallel stages and the join
+
+Folder numbering is a total order, so a plain `01/02/03` line can only say "after." When steps are genuinely independent — three scans that all read the same brief, none of which reads another's output — numbering them in sequence asserts a dependency that does not exist, and an agent walking the workspace cold will believe it. The structure is the documentation; a structure that lies is a defect, not a style choice. Give independent steps one number and different letters:
+
+```
+stages/
+├─ 01_scope/          → output/brief.md
+├─ 02a_market/        reads 01
+├─ 02b_competitors/   reads 01
+├─ 02c_regulatory/    reads 01
+└─ 03_synthesis/      reads 02a + 02b + 02c
+```
+
+Status still comes from scanning `output/`; it simply reads as a checklist rather than a cursor. `02a ✓ 02b ✓ 02c ▢` says one branch is outstanding and the synthesis is blocked — more informative than a single position on a line.
+
+The stage after a fan is a **join**, and its contract does the waiting (copy from `assets/templates/join-CONTEXT.md`). It names every sibling output as an exact working input and states what it is waiting for. No new mechanism is needed — the Inputs section already carries this. When branches contradict each other, the join surfaces the conflict as an editable file instead of quietly picking a winner; that contradiction is a finding, and putting it in front of a person before the expensive downstream work is the same move as any other stage boundary.
+
+Two limits, both real:
+
+- **Fan width is bounded by human attention, not by compute.** The bottleneck in an ICM is the human gate, not model wall-clock — parallelising three stages that each need twenty minutes of review saves seconds and creates a review pile. Two to four branches. If the work is wider and uniform (score twelve processes, audit thirty files), the repeating unit is a record, not a stage: use a record library and let the index log be the join.
+- **A fan is declared, never inferred at run time.** Independence is a fact about the work, settled when the workspace is designed. A run that decides its own width cannot name its inputs — it has to glob them — and the structure stops being readable before it executes. See *Where ICM loses*.
+
 ## Naming conventions
 
 - Stage folders: `NN_kebab-name` (`01_research`). Ordinal-only prefixes (`00-tracker.md`) for ordered files inside a folder.
+- Concurrent stages share a number and differ by a letter: `02a_market`, `02b_competitors`. Same number means no ordering between them; the next integer runs after all of them. The letter is not a priority — `02a` and `02b` are peers, and a run may do them in any order or at once.
 - Meta/system folders get an underscore prefix and sort to the top: `_meta/`, `_system/`, `_shared/`, `_config/`, `_templates/`, `_index/`, `_archive/`. Underscore = "about the workspace, not of the work."
 - Records and nodes: kebab-case slugs for machine-facing files, or human-readable Title Case where a person browses daily (an Obsidian vault). Pick one per workspace and write the choice into the schema — drift between schema and files is the most common decay.
 - Typed content files may prefix their type: `data-customer-list.md`.
@@ -87,6 +110,6 @@ Name these honestly rather than overclaiming:
 
 - **Real-time multi-agent collaboration** — agents responding to each other in tight loops need message-passing infrastructure; file handoffs are too slow.
 - **High concurrency** — many users hitting one pipeline needs queueing, state isolation, deployment. ICM is local-first by design.
-- **Automated mid-pipeline branching** — a human choosing stage 3a vs 3b between stages is natural; the *system* branching on AI output mid-run pushes ICM toward becoming the framework it replaced.
+- **Automated mid-pipeline branching** — a human choosing between two alternative stages at a gate is natural; the *system* branching on AI output mid-run pushes ICM toward becoming the framework it replaced. A fan is not a branch and does not fall under this: every lettered sibling always runs, and the width is fixed when the workspace is written, so nothing is decided at run time. Branching *selects* a path; that selection is where ICM should hand off to framework code.
 
 The claim is not that ICM replaces frameworks everywhere. The claim is that for sequential, human-reviewed, repeatable workflows — most knowledge work — the framework is more complexity than the problem requires, and that complexity costs opacity, fragility, and developer dependency.

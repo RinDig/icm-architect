@@ -17,7 +17,7 @@ Every ICM, whatever its form, obeys these. When building or restructuring, enfor
 
 1. **One folder, one job.** Each folder does a single step or holds a single kind of thing, and states its own purpose in a file inside itself. The structure is the documentation.
 2. **A small, stable entry file.** `CLAUDE.md` (or `AGENTS.md`) at the root answers "where am I, where does everything live, where do I go for task X" — and nothing else. Target under ~60 lines. It routes; it never holds content.
-3. **Numbering encodes order.** `01_`, `02_`, … where sequence matters. Renaming folders reorders the pipeline — that is the point.
+3. **Numbering encodes order.** `01_`, `02_`, … where sequence matters. Renaming folders reorders the pipeline — that is the point. Where sequence does *not* matter, say so: siblings sharing a number and differing by letter (`02a_`, `02b_`) are unordered with respect to each other, and the next integer runs after all of them. Never assert an order that isn't real.
 4. **Every folder-level contract is explicit.** A `CONTEXT.md` per working folder: what it reads (inputs), what it does (process), what it writes (outputs), what a human checks. See [assets/templates/stage-CONTEXT.md](assets/templates/stage-CONTEXT.md).
 5. **Factory vs. product.** Reference material (rules, voice, schemas, templates — stable across runs) lives structurally apart from working artifacts (outputs, drafts — new every run). Configure the factory once; the product is what each run emits.
 6. **Every output is an edit surface.** Intermediate outputs are plain files a human can open, edit, and save before the next step reads them. Nothing moves forward until a person has read the last output.
@@ -37,11 +37,12 @@ Every ICM, whatever its form, obeys these. When building or restructuring, enfor
 
 - What is the repeating unit of work? (an episode, a client, a report, a person, a team?)
 - Walk me through one run, start to finish. Where do you stop and check something before continuing?
+- For each step: does it need the step before it, or just the original input? Steps that only need the original input are independent.
 - What stays the same every run (voice, rules, brand, schema) vs. what is new every run?
 - What does "done" look like — what artifact leaves the workspace?
 - Who else touches this, and what do they need to find without asking you?
 
-Their pauses become stage boundaries. Their "I always check X before Y" become human gates. Their "it always has to sound like / follow Z" becomes factory reference material.
+Their pauses become stage boundaries. Their "I always check X before Y" become human gates. Their "it always has to sound like / follow Z" becomes factory reference material. Their "those two don't depend on each other" becomes a shared number, not a sequence.
 
 **2. Pick the form.** Read [references/forms.md](references/forms.md) and choose:
 
@@ -89,6 +90,7 @@ Validate any ICM — new or restructured — by walking it cold, as an agent wit
 - Can you state pipeline status purely by scanning what exists in `output/` folders (or node frontmatter)?
 - Is any routing file carrying content payload? Move the payload to a shelf; leave a pointer.
 - Is any fact stored in two places? Pick one home; link from the other.
+- Does any stage share a number with a sibling? Then confirm neither reads the other's output, and that the next stage names all of them in its inputs. A lettered stage reading a lettered sibling means the numbering is lying — renumber serially.
 - Token check: entry file + one contract + its inputs should land in roughly 2k–8k tokens.
 
 If a step fails, fix the structure — not by explaining more, but by moving or splitting files until the walk works.
@@ -103,4 +105,4 @@ If a step fails, fix the structure — not by explaining more, but by moving or 
 
 - [references/core.md](references/core.md) — the five design principles, the five-layer context hierarchy, naming conventions, token discipline. Read when writing contracts or when a structural call is contested.
 - [references/forms.md](references/forms.md) — the five forms in depth: skeleton trees, defining moves, failure modes. Read at step 2 of Build mode or step 2 of Restructure mode.
-- [assets/templates/](assets/templates/) — copyable starters: `CLAUDE.md`, workspace `CONTEXT.md`, `stage-CONTEXT.md`, `node.md`, `schema.md`, `questionnaire.md`.
+- [assets/templates/](assets/templates/) — copyable starters: `CLAUDE.md`, workspace `CONTEXT.md`, `stage-CONTEXT.md`, `join-CONTEXT.md`, `node.md`, `schema.md`, `questionnaire.md`.
