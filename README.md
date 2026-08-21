@@ -35,8 +35,9 @@ icm-architect/
 │  ├─ core.md            five principles, five-layer hierarchy, naming, token discipline
 │  ├─ forms.md           the six forms in depth: skeletons, moves, failure modes
 │  └─ system-map.md      audit pipeline for the System map form
-└─ assets/templates/     copyable starters: CLAUDE.md, CONTEXT.md, stage contract,
-                         node card, object/process cards, schema, questionnaire
+└─ assets/templates/     copyable starters: workspace.md, agent-entry stubs,
+                         CONTEXT.md, stage contract, node card,
+                         object/process cards, schema, questionnaire
 ```
 
 MIT licensed, like the protocol it serves.

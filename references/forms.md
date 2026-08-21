@@ -23,8 +23,9 @@ The paper's canonical shape. The same sequence runs weekly or daily with differe
 
 ```
 workspace/
-├─ CLAUDE.md               identity + routing table
-├─ CONTEXT.md              the pipeline in one screen
+├─ workspace.md             identity + routing table
+├─ CLAUDE.md / AGENTS.md / GEMINI.md   pointer stubs → workspace.md
+├─ CONTEXT.md               the pipeline in one screen
 ├─ stages/
 │  ├─ 01_research/   {CONTEXT.md, references/, output/}
 │  ├─ 02_script/     {CONTEXT.md, references/, output/}
@@ -49,17 +50,18 @@ Several distinct production lines share one brand, voice, and reference layer. T
 
 ```
 workspace/
-├─ CLAUDE.md               the map: what lives where, which pipeline for which job
-├─ 01-pillars/             shared factory: positioning, pillars
-├─ 02-brand-voice/         shared factory: voice, style
-├─ 03-video-production/    a full Pipeline workspace (own CLAUDE.md)
-├─ 04-scene-generation/    a full Pipeline workspace (own CLAUDE.md)
-└─ 05-animation-studio/    a full Pipeline workspace (own CLAUDE.md)
+├─ workspace.md             the map: what lives where, which pipeline for which job
+├─ CLAUDE.md / AGENTS.md / GEMINI.md   pointer stubs → workspace.md
+├─ 01-pillars/              shared factory: positioning, pillars
+├─ 02-brand-voice/          shared factory: voice, style
+├─ 03-video-production/     a full Pipeline workspace (own workspace.md)
+├─ 04-scene-generation/     a full Pipeline workspace (own workspace.md)
+└─ 05-animation-studio/     a full Pipeline workspace (own workspace.md)
 ```
 
 **Defining moves:**
-- Each sub-pipeline is self-contained with its own entry file — "they don't share state" except through the root reference layers.
-- The root entry file routes by task ("making a talking-head video → 03; animating a diagram → 05") and holds nothing else.
+- Each sub-pipeline is self-contained with its own `workspace.md` — "they don't share state" except through the root reference layers.
+- The root `workspace.md` routes by task ("making a talking-head video → 03; animating a diagram → 05") and holds nothing else.
 - A pipeline may host sibling *patterns* (two variants of the same line, e.g. record-then-cut vs animation-first) — the routing move recursing one level down.
 
 **Watch for:** the root map going stale as pipelines evolve (the map states only what rarely changes; details live in each pipeline); shared reference duplicated into sub-pipelines (link up instead).
@@ -94,8 +96,8 @@ The deliverable is a navigable body of knowledge: a brain, a domain wiki, a mode
 
 ```
 workspace/
-├─ CLAUDE.md
-├─ corpus/                 raw sources + _index.md checkbox manifest (state surface)
+├─ workspace.md             (+ CLAUDE/AGENTS/GEMINI pointer stubs)
+├─ corpus/                  raw sources + _index.md checkbox manifest (state surface)
 ├─ extraction/             the factory: an ICM Pipeline whose output is the bundle
 └─ bundle/                 the product:
    ├─ index.md             what's in here, layer by layer
@@ -119,7 +121,7 @@ The subject is a company or team: who does what, what data moves where, what's r
 
 ```
 workspace/
-├─ CLAUDE.md / AGENTS.md   entry (one generated from the other)
+├─ workspace.md             entry home (+ CLAUDE/AGENTS/GEMINI pointer stubs)
 ├─ FILE-MAP.md             GENERATED index — agents jump here, never crawl
 ├─ _meta/                  the rules: schema.md, maturity-levels.md, ritual docs
 ├─ teams/
@@ -140,7 +142,7 @@ workspace/
 - The librarian ritual per team: inventory → single source of truth → give it shape → catalogue → shelve by sensitivity → connect the agent. The human stays the approval gate; the agent drafts and proposes.
 - Patterns require three independent occurrences: one team complaining is a gripe, three teams landing on the same workflow and the same pain is structure.
 
-**Watch for:** schema mandating names the files stopped using (reconcile immediately); duplicate entry files drifting; instance data tangled into the reusable method (extract the blank starter kit early); node types multiplying past what anyone queries.
+**Watch for:** schema mandating names the files stopped using (reconcile immediately); content hand-edited into a pointer stub instead of `workspace.md`; instance data tangled into the reusable method (extract the blank starter kit early); node types multiplying past what anyone queries.
 
 ## 6. System map — a body of work as an edit graph
 
@@ -148,9 +150,9 @@ The subject is a tree someone will change: a repository, a markdown vault, or bo
 
 ```
 subject/
-├─ CLAUDE.md                 existing entry — add one row pointing at map/
+├─ workspace.md               existing entry — add one row pointing at map/
 └─ map/
-   ├─ CLAUDE.md              catalog (generate AGENTS.md + routing.md)
+   ├─ workspace.md            catalog (generate CLAUDE/AGENTS/GEMINI stubs + routing.md)
    ├─ CONTEXT.md             universes + name collisions
    ├─ _meta/schema.md
    ├─ _templates/            object.md, process.md
@@ -165,7 +167,7 @@ subject/
 - **Hits / Does not hit** is the waterfall. “Does not hit” names the obvious next noun that is the wrong one.
 - Compose with Record library (the cards) inside this form. Do not confuse this with Context map (an org) or Knowledge bundle (how something thinks).
 
-**Watch for:** copying behaviour into cards; mapping intent docs as live; two hand-edited entry files; marking `verified` without a citation.
+**Watch for:** copying behaviour into cards; mapping intent docs as live; content hand-edited into pointer stubs instead of `workspace.md`; marking `verified` without a citation.
 
 The audit pipeline, card sections, and walk test for this form: [system-map.md](system-map.md).
 

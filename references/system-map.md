@@ -28,13 +28,13 @@ Product language and file/type names often disagree. State both once in the cata
 
 Propose before writing. Prefer a `map/` shelf next to existing orientation (`developer-docs/`, `docs/`, vault root) so the subject’s entry file can add one routing row. Do not drop a map inside `src/` or scatter cards through the tree you are mapping.
 
-Entry files: edit `CLAUDE.md`. Generate `AGENTS.md` and `routing.md` as byte-identical twins in the same folder. Never hand-edit the twins. Tools that ignore `CLAUDE.md` still get the catalog.
+Entry files: edit `workspace.md`. Generate `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` pointer stubs and `routing.md` as byte-identical twins in the same folder. Never hand-edit the twins. Tools that auto-load any of the stub filenames still land on the catalog.
 
 ## Target tree (smallest that carries the work)
 
 ```
 map/
-├─ CLAUDE.md              L0 catalog (twins: AGENTS.md, routing.md)
+├─ workspace.md            L0 catalog (stubs: CLAUDE.md, AGENTS.md, GEMINI.md; twin: routing.md)
 ├─ CONTEXT.md             how to walk; the universes; name collisions
 ├─ _meta/schema.md        closed node types
 ├─ _templates/            object.md, process.md
@@ -58,7 +58,7 @@ List the tree. Classify each area: catalog / contract / factory / product / dead
 
 ### 1 — Catalog
 
-Write `CLAUDE.md`, `CONTEXT.md`, schema, templates, `objects/_index.md` with **stub lines** for every noun you will not invent a body for. Wire one routing row from the subject’s existing entry file. Walk: “where do I go to understand X?” lands in two hops.
+Write `workspace.md`, `CONTEXT.md`, schema, templates, `objects/_index.md` with **stub lines** for every noun you will not invent a body for. Generate the per-tool pointer stubs (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`). Wire one routing row from the subject’s existing entry file. Walk: “where do I go to understand X?” lands in two hops.
 
 ### 2 — Nouns (objects)
 
@@ -103,8 +103,8 @@ After the first fill, rip the load-bearing claims again (especially Hits / Does 
 
 A cold agent, no memory of the subject:
 
-1. Open the subject’s entry file. Is the map one hop away?
-2. Open `map/CLAUDE.md`. Can it say what the colliding names mean without opening a card?
+1. Open the subject’s entry file (or its pointer stub → `workspace.md`). Is the map one hop away?
+2. Open `map/workspace.md`. Can it say what the colliding names mean without opening a card?
 3. Open one object card. Does it cite source, state the why, and give a first-order waterfall?
 4. From `effects/CONTEXT.md`, can it name what a stated change hits and what it does not?
 5. Follow one `See` link. Does it land on source, not another essay?
@@ -117,6 +117,6 @@ If a step fails, split or move files. Do not add a “how to read this map” no
 - Mapping FeatureRequests / aspiration as live. Ghost it.
 - Copying as-built behaviour into cards. Point at the file that owns it.
 - Empty process/effects folders.
-- Two hand-edited entry files (`CLAUDE.md` and `AGENTS.md` that drift).
+- Content hand-edited into a pointer stub (`CLAUDE.md` / `AGENTS.md` / `GEMINI.md`) instead of `workspace.md` — stubs are regenerated, never maintained.
 - Cards with no citations marked `verified`.
 - Slurping the whole `objects/` folder in a later session — the catalog exists so you do not.

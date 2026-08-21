@@ -20,7 +20,7 @@ The consequence, stated once: *stage sequencing is the folder numbering; context
 
 | Layer | Typical file | Question it answers | Role | Size |
 |---|---|---|---|---|
-| L0 | `CLAUDE.md` | Where am I? | routing | 300–800 tokens |
+| L0 | `workspace.md` (via `CLAUDE.md`/`AGENTS.md`/`GEMINI.md` stubs) | Where am I? | routing | 300–800 tokens |
 | L1 | root `CONTEXT.md` | Where do I go? | routing | 200–500 tokens |
 | L2 | stage `CONTEXT.md` | What do I do? | **the control point** | 200–500 tokens |
 | L3 | `references/`, `_shared/` | What rules apply? | factory (stable) | 500–2k tokens |
@@ -65,7 +65,7 @@ Rules: inputs are exact paths, split working vs reference. The process is number
 - Meta/system folders get an underscore prefix and sort to the top: `_meta/`, `_system/`, `_shared/`, `_config/`, `_templates/`, `_index/`, `_archive/`. Underscore = "about the workspace, not of the work."
 - Records and nodes: kebab-case slugs for machine-facing files, or human-readable Title Case where a person browses daily (an Obsidian vault). Pick one per workspace and write the choice into the schema — drift between schema and files is the most common decay.
 - Typed content files may prefix their type: `data-customer-list.md`.
-- Entry file: `CLAUDE.md` for Claude Code, `AGENTS.md` for other agents. If both exist, one is generated from the other or is a one-line pointer — never two hand-maintained copies.
+- Entry files: hub-and-spoke. `workspace.md` is the single hand-maintained L0 home (identity, map, routing). Each tool's auto-load filename — `CLAUDE.md` (Claude Code), `AGENTS.md` (Codex and most agents), `GEMINI.md` (Gemini) — is a thin generated stub that says "Read `workspace.md` now before doing any work" and nothing else. Never hand-edit a stub; never let one carry content; regenerate all of them together when the workspace name changes. This is what keeps a multi-model setup (different executors dispatched by an orchestrator) converging on one source of truth instead of drifting into N copies of the instructions.
 - Templates are blank, named for what they produce, and live together: `_templates/pilot-brief.md`.
 
 ## Library rules

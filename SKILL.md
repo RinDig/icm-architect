@@ -16,7 +16,7 @@ Method: Interpretable Context Methodology (Van Clief & McDermott, arXiv:2603.160
 Every ICM, whatever its form, obeys these. When building or restructuring, enforce all ten:
 
 1. **One folder, one job.** Each folder does a single step or holds a single kind of thing, and states its own purpose in a file inside itself. The structure is the documentation.
-2. **A small, stable entry file.** `CLAUDE.md` (or `AGENTS.md`) at the root answers "where am I, where does everything live, where do I go for task X" — and nothing else. Target under ~60 lines. It routes; it never holds content.
+2. **One entry home, many doors.** A single small, stable `workspace.md` at the root answers "where am I, where does everything live, where do I go for task X" — and nothing else. Target under ~60 lines. It routes; it never holds content. Every tool-specific auto-load file (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`) is a thin generated pointer stub — "Read `workspace.md` now before doing any work" — never a second copy of the instructions. This hub-and-spoke keeps every model (Claude Code, Codex, Gemini, anything the orchestrator dispatches) converging on one source of truth.
 3. **Numbering encodes order.** `01_`, `02_`, … where sequence matters. Renaming folders reorders the pipeline — that is the point.
 4. **Every folder-level contract is explicit.** A `CONTEXT.md` per working folder: what it reads (inputs), what it does (process), what it writes (outputs), what a human checks. See [assets/templates/stage-CONTEXT.md](assets/templates/stage-CONTEXT.md).
 5. **Factory vs. product.** Reference material (rules, voice, schemas, templates — stable across runs) lives structurally apart from working artifacts (outputs, drafts — new every run). Configure the factory once; the product is what each run emits.
@@ -59,7 +59,7 @@ Real workspaces mix forms (a record library whose records are mini knowledge bun
 
 **3. Scaffold the smallest structure that carries the work.** Copy starters from [assets/templates/](assets/templates/) and fill them in. Do not create folders for stages that don't exist yet, empty "misc" buckets, or speculative depth. Three real stages beat seven imagined ones. If the whole job fits in one saved prompt, say so and don't build a workspace at all.
 
-**4. Write the contracts.** Root `CLAUDE.md` (identity + routing table), root `CONTEXT.md` (the pipeline or schema definition), one `CONTEXT.md` per stage/hub folder, `setup/questionnaire.md` if the factory needs configuring per user. Write inputs as explicit file paths, split into working (this run) and reference (every run).
+**4. Write the contracts.** Root `workspace.md` (identity + routing table), generated pointer stubs (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md` — copy from [assets/templates/agent-entry-stubs.md](assets/templates/agent-entry-stubs.md)), root `CONTEXT.md` (the pipeline or schema definition), one `CONTEXT.md` per stage/hub folder, `setup/questionnaire.md` if the factory needs configuring per user. Write inputs as explicit file paths, split into working (this run) and reference (every run).
 
 **5. Validate with the walk test** (below).
 
@@ -70,7 +70,7 @@ Real workspaces mix forms (a record library whose records are mini knowledge bun
 **2. Find the hidden form.** Ask the owner (or infer and confirm): what is the repeating unit here? Where does work enter and leave? The mess usually contains a real pipeline, library, or map that grew without a skeleton — extract it, don't replace it. Interview the folder the way you'd interview the person.
 
 **3. Classify every file** into one of five roles:
-- **Catalog** — identity/routing (becomes or feeds `CLAUDE.md` / index files)
+- **Catalog** — identity/routing (becomes or feeds `workspace.md` / index files)
 - **Contract** — describes how a step works (becomes a `CONTEXT.md`)
 - **Factory** — stable reference (→ `_shared/`, `_system/`, or `references/`)
 - **Product** — run-specific artifacts (→ stage `output/` or record folders)
@@ -78,7 +78,7 @@ Real workspaces mix forms (a record library whose records are mini knowledge bun
 
 **4. Propose before moving.** Present the target tree and a migration map (old path → new path → role). Get approval. This is a human gate in a method built on human gates — honor it.
 
-**5. Migrate.** Move files, write the entry file and contracts, de-duplicate toward one-home-per-fact (leave a link where the copy lived if anything might reference it). Separate method from instance: if the structure will be reused elsewhere, the blank template lives apart from this filled-in deployment.
+**5. Migrate.** Move files, write `workspace.md` and the contracts, generate the per-tool pointer stubs (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`), de-duplicate toward one-home-per-fact (leave a link where the copy lived if anything might reference it). Separate method from instance: if the structure will be reused elsewhere, the blank template lives apart from this filled-in deployment.
 
 **6. Validate with the walk test.**
 
@@ -86,13 +86,13 @@ Real workspaces mix forms (a record library whose records are mini knowledge bun
 
 Validate any ICM — new or restructured — by walking it cold, as an agent with no memory:
 
-- Open the root. Can you answer *where am I* and *where do I go for the current task* within the entry file plus at most two more reads?
+- Open the root. Can you answer *where am I* and *where do I go for the current task* within the entry chain (auto-load stub → `workspace.md`) plus at most one more read?
 - Pick any stage/node. Does its contract name exact input paths, the job, the output, and the human check?
 - Can you state pipeline status purely by scanning what exists in `output/` folders (or node frontmatter)?
 - Is any routing file carrying content payload? Move the payload to a shelf; leave a pointer.
 - Is any fact stored in two places? Pick one home; link from the other.
 - Token check: entry file + one contract + its inputs should land in roughly 2k–8k tokens.
-- System map only: can a cold agent answer *what is X* and *what else moves if I change X* from `map/CLAUDE.md` plus one card? Extra checks are in [references/system-map.md](references/system-map.md).
+- System map only: can a cold agent answer *what is X* and *what else moves if I change X* from `map/workspace.md` plus one card? Extra checks are in [references/system-map.md](references/system-map.md).
 
 If a step fails, fix the structure — not by explaining more, but by moving or splitting files until the walk works.
 
@@ -100,11 +100,11 @@ If a step fails, fix the structure — not by explaining more, but by moving or 
 
 - **Don't over-structure.** The ladder runs: chat → saved prompt/skill → folders + one agent. Only climb when the rung below is genuinely automated and repeating. A workspace for a thing done twice is scaffolding, not architecture.
 - **Know where ICM loses.** Real-time multi-agent collaboration, high-concurrency multi-user serving, and automated mid-pipeline branching genuinely need framework code. ICM is for sequential, human-reviewed, repeatable work — which is most knowledge work, but not all of it.
-- **Anti-patterns seen in the wild:** duplicated entry files that drift (generate one from the other, or make one a pointer); schema documents that mandate names the actual files stopped using (update the schema or the files — pick one); hand-edits to generated indexes; workshop sessions that produce slides instead of structured data (every working session should end in an artifact the structure can hold); patterns declared top-down (one team complaining is a gripe — the same shape appearing three independent times is structure).
+- **Anti-patterns seen in the wild:** duplicated entry files that drift — the fix is the hub-and-spoke: one hand-maintained `workspace.md`, all `CLAUDE.md`/`AGENTS.md`/`GEMINI.md` files are pure pointer stubs that are regenerated, never hand-edited, and never carry content of their own; schema documents that mandate names the actual files stopped using (update the schema or the files — pick one); hand-edits to generated indexes; workshop sessions that produce slides instead of structured data (every working session should end in an artifact the structure can hold); patterns declared top-down (one team complaining is a gripe — the same shape appearing three independent times is structure).
 
 ## References
 
 - [references/core.md](references/core.md) — the five design principles, the five-layer context hierarchy, naming conventions, token discipline. Read when writing contracts or when a structural call is contested.
 - [references/forms.md](references/forms.md) — the six forms in depth: skeletons, moves, failure modes. Read at step 2 of Build mode or step 2 of Restructure mode.
 - [references/system-map.md](references/system-map.md) — audit pipeline for the System map form. Read when that form is chosen.
-- [assets/templates/](assets/templates/) — copyable starters: `CLAUDE.md`, workspace `CONTEXT.md`, `stage-CONTEXT.md`, `node.md`, `object.md`, `process.md`, `schema.md`, `questionnaire.md`.
+- [assets/templates/](assets/templates/) — copyable starters: `workspace.md` (the real entry home), `agent-entry-stubs.md` (the per-tool pointer stubs), workspace `CONTEXT.md`, `stage-CONTEXT.md`, `node.md`, `object.md`, `process.md`, `schema.md`, `questionnaire.md`.
