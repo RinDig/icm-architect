@@ -70,7 +70,7 @@ Nothing "runs" to completion; records (people, clients, sessions, deals) get cre
 
 ```
 workspace/
-├─ 00_START-HERE.md        the map (identity + routing in one file)
+├─ CLAUDE.md               the map (identity + routing in one file)
 ├─ _index/                 catalog: log.md — one line per record, id + status
 ├─ _templates/
 │  └─ record-template/     the stamp: every record starts as a copy of this

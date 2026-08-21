@@ -1,5 +1,5 @@
 ---
-type: process
+type: process   # Context map process node (scored). The System map verb card is process.md.
 team: {team-slug}
 owner: {name}
 ai-level: L0   # L0 manual · L1 copy-paste · L2 structured · L3 integrated
