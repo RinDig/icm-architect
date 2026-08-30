@@ -34,10 +34,12 @@ icm-architect/
 ├─ references/
 │  ├─ core.md                 five principles, five-layer hierarchy, naming, token discipline
 │  ├─ forms.md                the six forms in depth: skeletons, moves, failure modes
-│  ├─ system-map.md           audit pipeline for the System map form
-│  └─ reference-integrity.md  restructure move-safety gate
+│  ├─ system-map.md              audit pipeline for the System map form
+│  ├─ reference-integrity.md     restructure move-safety gate
+│  └─ live-tree-restructure.md   restructuring a tree that is already in use
 └─ assets/templates/     copyable starters: CLAUDE.md, CONTEXT.md, stage contract,
-                         node card, object/process cards, schema, questionnaire
+                         node card, object/process cards, schema, questionnaire,
+                         effects index, private shelf
 ```
 
 MIT licensed, like the protocol it serves.
