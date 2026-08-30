@@ -48,6 +48,12 @@ map/
 
 Do not create `processes/` or `effects/` empty. Three verified noun clusters beat seven imagined shelves.
 
+## Generated nodes
+
+Where the subject is code, a generator can produce a `graph/` shelf under `map/` — one node per module, route, or table, with the edges the parser can see. Cards then *link* a node instead of restating its edges, which is what keeps a card under its line budget. The graph is generated and committed; never hand-edited.
+
+Currency is the trap. A committed graph's `built-at` commit is, by construction, the PARENT of the commit that adds it — the graph is part of that commit — so sha equality can never mean "current" once a map has landed, and any consumer testing it that way calls every real map stale. Record a content hash of the parsed source set beside the graph (a `_sources.txt` listing each parsed file with its hash, plus a `source-hash:` line in the graph's meta file) and test currency by content instead. Count a graph as drifted only when a rebuild's nodes actually differ.
+
 ## Audit pipeline (human-gated slices)
 
 Stop after each slice. A person or a cold walk reads the output before the next slice starts.
@@ -85,7 +91,11 @@ Each process card: Input → Movement → Output; numbered steps with citations;
 
 `effects/CONTEXT.md` is a catalog: “if you are changing X, open these cards.” It does not copy waterfalls. If the index and a card disagree, fix the card.
 
+The index is a FOUR-column table: `if you are changing… | open these cards first | and this graph node | does not hit (first-order)`. The last cell is one clause naming the obvious wrong next noun — a pointer, never a waterfall. A three-column index fails the walk test's step 4, which asks for hits AND does-not-hit.
+
 Then walk it backwards. The index answers “I am changing X, what inside the tree moves.” It does not answer “what outside the tree points in.” Ask the owner — configs, issue trackers, agents, scheduled jobs — for absolute paths into the subject, and record each one on the card it lands on. These consumers break silently: nothing in the tree references them, so no card names them until you go looking.
+
+Every link in an authored map file resolves to an existing file. A noun with no card is linked to its own line in `objects/_index.md` (an `<a id="slug"></a>` anchor) and reads `(stub)`; a fragment link needs a real heading or anchor, and a bolded phrase is neither. The one exception: an `_index.md` stub line may link its future card path, and the file says so. This is a mechanical existence check over the diff, run before every commit that touches links — not a content judgment, and not a review seat.
 
 ### 5 — Re-verify
 
@@ -110,7 +120,7 @@ A cold agent, no memory of the subject:
 3. Open one object card. Does it cite source, state the why, and give a first-order waterfall?
 4. From `effects/CONTEXT.md`, can it name what a stated change hits and what it does not?
 5. Follow one `See` link. Does it land on source, not another essay?
-6. Token check: entry + hub + one card stays in the 2k–8k band.
+6. Token check: entry + hub + one card stays in the 2k–8k band. “Entry” means the entry file's inserted “Where to look” section, not the whole entry file — a house-rules book of 15k tokens is out of the map's scope. Record the whole-file count as an observation, not a band failure.
 
 If a step fails, split or move files. Do not add a “how to read this map” novel.
 
