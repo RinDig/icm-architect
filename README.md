@@ -20,6 +20,10 @@ Every step ends at a **check** (a person, a script, or a small model) so a wrong
 
 The workspaces it builds are plain folders and markdown with `AGENTS.md` as the entry file, the name most agents read by default; tools that look for another name get a one-line pointer to it. Nothing in a workspace depends on one vendor.
 
+## Security and access
+
+Review [SECURITY.md](SECURITY.md) for workspace access boundaries, approvals, visualization CDN dependencies and the limitations of static security scanning. The optional Python tools use the standard library, but the generated visualization loads third-party JavaScript in the browser.
+
 ## Install
 
 Keep the folder named `icm-architect`: a skill's name must match its folder.
