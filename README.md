@@ -43,6 +43,6 @@ Then ask your agent to "ICM this", "structure this for agents", or "build me a w
 - `SKILL.md`: the method. Load it first; it routes to the rest.
 - `references/`: the detail, read only when a step needs it.
 - `assets/templates/`: blank starters a workspace copies.
-- `scripts/`: optional standard-library Python 3 that a workspace copies into `_tools/`. They check that links and input paths resolve, draw a workspace (or several) as one interactive graph, generate indexes, and check quotes against their sources. An agent without a shell can skip them.
+- `scripts/`: optional standard-library Python 3 that a workspace copies into `_tools/`. They check that links and input paths resolve, draw a workspace (or several) as one interactive graph, generate indexes, and check quotes against their sources. An agent without a shell can skip them. Tests: `python -I -m unittest discover -s tests` (Python 3.9 or later).
 
 MIT licensed, like the protocol it serves.

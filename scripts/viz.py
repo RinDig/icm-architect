@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """Draw one or more graph files written by links.py into one viz.html.
 
-    python -I _tools/viz.py graph.jsonl [more.jsonl ...] [-o viz.html]
+    python -I _tools/viz.py graph.jsonl [more.jsonl ...] [-o viz.html] [--all-bodies]
 
 Writes viz.html beside the first graph file unless -o names another path. Standard library only.
-The page loads cytoscape and marked from jsDelivr, so viewing it needs the internet.
+The page loads cytoscape, marked and DOMPurify from jsDelivr, pinned by integrity hash, so viewing
+it needs the internet. Note HTML is sanitized before it is shown.
+- A note whose access_tier is set to anything but public keeps its body out of the page (its node,
+  title and links stay); --all-bodies puts every body in.
 - A node is a .md file; catalogs and logs (AGENTS.md and its pointers, index.md, _index.md,
   log.md) are left out because they link to everything.
 - Colors follow the frontmatter type, most common type first. The first node shown is the
@@ -26,7 +29,13 @@ except Exception:
 PALETTE = ["#1d4ed8", "#15803d", "#c2410c", "#7e22ce", "#b45309", "#0e7490",
            "#b91c1c", "#0f766e", "#ea580c", "#475569", "#be185d", "#4d7c0f"]
 CATALOGS = {"agents.md", "claude.md", "gemini.md", "index.md", "_index.md", "log.md"}
-LINK = re.compile(r"\[([^\]]*)\]\((<[^>]+>|[^)\s]+)\)")
+PUBLIC_TIERS = {"", "public"}
+LINK = re.compile(r"""\[([^\]]*)\]\((<[^>]+>|[^)\s]+)(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*\)""")
+
+
+def script_safe(value):
+    """JSON that can sit inside a <script> block: no '<' can open or close a tag."""
+    return json.dumps(value, ensure_ascii=False).replace("<", "\\u003c")
 
 
 def load(path):
@@ -62,7 +71,8 @@ def heading_of(path):
 
 def main():
     args = sys.argv[1:]
-    out = None
+    out, all_bodies = None, "--all-bodies" in args
+    args = [a for a in args if a != "--all-bodies"]
     if "-o" in args:
         i = args.index("-o")
         out = Path(args[i + 1]).resolve()
@@ -74,7 +84,7 @@ def main():
     many = len(graphs) > 1
 
     folders = [root.name for root, _, _ in graphs]
-    ids, nodes, names = {}, [], []
+    ids, nodes, names, withheld = {}, [], [], {}
     for root, items, _ in graphs:
         names.append(heading_of(root / "AGENTS.md") or heading_of(root / "CLAUDE.md") or heading_of(root / "index.md") or root.name)
         prefix = root.name if folders.count(root.name) == 1 else f"{root.parent.name}/{root.name}"
@@ -83,6 +93,9 @@ def main():
                 continue
             nid = (f"{prefix}/" if many else "") + n["node"][:-3]
             ids[(root / n["node"]).resolve()] = nid
+            tier = (n.get("access_tier") or "").strip().lower()
+            if tier not in PUBLIC_TIERS and not all_bodies:
+                withheld[nid] = tier
             tags = [t.strip() for t in (n.get("tags") or "").strip("[]").split(",") if t.strip()]
             nodes.append({"data": {"id": nid, "label": n["title"], "type": n["type"] or "untyped",
                                    "description": n["description"], "tags": tags, "size": 30,
@@ -109,7 +122,8 @@ def main():
             return m.group(0)
         return LINK.sub(fix, body_of(file))
 
-    bodies = {nid: rewrite(path) for path, nid in ids.items()}
+    bodies = {nid: f"*Body left out: access_tier is {withheld[nid]}. Rerun viz.py with --all-bodies to include it.*"
+              if nid in withheld else rewrite(path) for path, nid in ids.items()}
 
     degree = {}
     for s, t in edges:
@@ -129,19 +143,23 @@ def main():
     bundle = {"nodes": nodes, "bodies": bodies, "types": types, "palette": palette,
               "edges": [{"data": {"id": f"{s}__{t}", "source": s, "target": t}} for s, t in sorted(edges)],
               "root": max(degree, key=degree.get) if degree else (nodes[0]["data"]["id"] if nodes else "")}
-    data = json.dumps(bundle, ensure_ascii=False).replace("</", "<\\/")
-    html = SHELL.replace("__NAME__", json.dumps(" + ".join(names))).replace("__DATA__", data)
-    out.write_text(html, encoding="utf-8", newline="\n")
+    values = {"__NAME__": script_safe(" + ".join(names)), "__DATA__": script_safe(bundle)}
+    html = re.sub(r"__NAME__|__DATA__", lambda m: values[m.group(0)], SHELL)  # one pass: a value can't hold a token
+    with out.open("w", encoding="utf-8", newline="\n") as f:  # Python 3.9 has no write_text(newline=)
+        f.write(html)
     print(f"wrote {out.name}: {len(nodes)} nodes, {len(edges)} edges")
+    if withheld:
+        print(f"left out {len(withheld)} non-public bodies (access_tier); --all-bodies includes them")
 
 
 SHELL = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>OKF Bundle Viewer</title>
-<script src="https://cdn.jsdelivr.net/npm/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+<title>Graph</title>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape@3.28.1/dist/cytoscape.min.js" integrity="sha384-J7Q85oZE4GJ/e7+n2aOQsLXfDwwfnA8S2nZAL5BpFsfpCF84zQD7LroZ/dMnLgex" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js" integrity="sha384-NNQgBjjuhtXzPmmy4gurS5X7P4uTt1DThyevz4Ua0IVK5+kazYQI1W27JHjbbxQz" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js" integrity="sha384-+VfUPEb0PdtChMwmBcBmykRMDd+v6D/oFmB3rZM/puCMDYcIvF968OimRh4KQY9a" crossorigin="anonymous"></script>
 <style>
 * { box-sizing: border-box; }
 body {
@@ -339,7 +357,7 @@ window.BUNDLE = __DATA__;
 (function () {
   const bundle = window.BUNDLE;
   const bundleName = window.BUNDLE_NAME;
-  document.title = `${bundleName} — OKF Viewer`;
+  document.title = `${bundleName} — graph`;
   document.getElementById("bundle-name").textContent = bundleName;
 
   // Populate type filter
@@ -520,9 +538,8 @@ window.BUNDLE = __DATA__;
     }
 
     const body = bundle.bodies[conceptId] || "";
-    const html = marked.parse(body, { breaks: false, gfm: true });
     const bodyEl = document.getElementById("detail-body");
-    bodyEl.innerHTML = html;
+    bodyEl.innerHTML = DOMPurify.sanitize(marked.parse(body, { breaks: false, gfm: true }));
     rewriteInternalLinks(bodyEl);
 
     const bl = backlinks[conceptId] || [];
