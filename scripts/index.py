@@ -32,10 +32,23 @@ def split(text):
 
 
 def field(front, name):
-    m = re.search(rf"^{name}:\s*(.+)$", front, re.M)
-    if not m:
+    """One frontmatter value as one line: plain or quoted, a > or | block, or a - list joined by ', '."""
+    lines = front.splitlines()
+    for i, line in enumerate(lines):
+        m = re.match(rf"{name}:(?:[ \t]+(.*))?$", line)
+        if m:
+            break
+    else:
         return ""
-    v = m.group(1).strip()
+    v = (m.group(1) or "").strip()
+    below = []
+    for line in lines[i + 1:]:
+        if line.strip() and not line[:1].isspace():
+            break
+        below.append(line.strip())
+    if v in ("", ">", "|", ">-", "|-", ">+", "|+"):
+        items = [x[2:].strip() if x.startswith("- ") else x for x in below if x]
+        return (", " if v == "" and below and below[0].startswith("- ") else " ").join(items)
     if v[:1] not in "\"'":
         v = re.split(r"\s+#", v, maxsplit=1)[0]  # drop a YAML comment
     if len(v) > 1 and v[0] == v[-1] == '"':
@@ -68,7 +81,8 @@ def main():
             if field(front, "status"):
                 line += f" ({field(front, 'status')})"
             lines.append(line)
-        (folder / "_index.md").write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+        with (folder / "_index.md").open("w", encoding="utf-8", newline="\n") as out:  # Python 3.9 has no write_text(newline=)
+            out.write("\n".join(lines) + "\n")
         print(f"wrote {folder.as_posix()}/_index.md: {len(lines) - 3} notes")
 
 

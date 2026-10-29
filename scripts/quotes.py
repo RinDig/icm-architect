@@ -11,17 +11,21 @@ A quote is  "verbatim line" (key position)  where
             declared in _meta/sources.txt as  key = filename)
   position  a timestamp or range for transcripts (12:30, 1:02:15, 12:30-13:05), or a page or
             page range for documents (page 2, p2, pp 4-5)
-Transcripts are timed when their lines start with **[12:30]** or [12:30]. A document is paged when
+Transcripts are timed when their lines start with **[12:30]** or [12:30]; a paragraph's text may sit
+on the same line or on the lines below, up to the next timestamp. A document is paged when
 it has lines that read  Page 1, Page 2 ... ; any other source is matched anywhere and its position
 is not checked. A cut inside a quote is written ... and each piece is checked in order.
 A timed quote is accepted within one paragraph of its cited position, since a line can straddle two.
 Every bullet under an "In their words" heading must be a cited quote, and a cut must not drop a
 negation. Keep-out phrases (_meta/keep-out.txt, one per line, whole words, any case) fail anywhere
-outside sources/raw/ and _meta/, frontmatter included. --show-cuts lists what every cut drops.
+outside sources/raw/ and _meta/, frontmatter included; a Hebrew or Arabic phrase also fails with a
+prefix attached (ל, ו, ש..., ال, و, ب...). --show-cuts lists what every cut drops.
+Matching works in any script: case, accents and Hebrew or Arabic vowel marks are ignored.
 """
 import bisect
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 try:
@@ -42,12 +46,21 @@ WORDS_HEADING = re.compile(r"#{1,6}\s*in\s+(their|his|her|the speaker'?s?)\s+wor
 NEGATION = re.compile(r"\b(never|not|no|none|nothing|nobody|without|cannot|neither|nor|hardly|"
                       r"cant|dont|doesnt|didnt|isnt|arent|wasnt|werent|wont|wouldnt|shouldnt|couldnt)\b")
 
+TIMESTAMP_LINE = re.compile(rf"\s*(?:\*\*)?\[({TIME})\](?:\*\*)?\s*(.*)")
+# Letters that attach to the front of a word: Hebrew ו ה ב כ ל מ ש, Arabic و ف ب ك ل س and ال.
+PREFIXES = {"hebrew": "(?:[ובכלמשה]{1,3})?", "arabic": "(?:[وفبكلس]{0,2}(?:ال)?)?"}
+
 problems, warnings, cuts = [], [], []
 
 
+def strip_marks(s):
+    """Drop accents and vowel marks (niqqud, harakat), so marked and unmarked text match."""
+    return "".join(c for c in unicodedata.normalize("NFKD", s) if not unicodedata.combining(c))
+
+
 def norm(s):
-    s = s.lower().replace("’", "'").replace("'", "")
-    return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9]+", " ", s)).strip()
+    s = strip_marks(s).casefold().replace("’", "'").replace("'", "")
+    return re.sub(r"\s+", " ", re.sub(r"[\W_]+", " ", s)).strip()
 
 
 def secs(t):
@@ -91,11 +104,13 @@ def load_sources(root):
         text = path.read_text(encoding="utf-8-sig", errors="replace")
         paras = []
         for line in text.splitlines():
-            m = re.match(rf"\s*(?:\*\*)?\[({TIME})\](?:\*\*)?\s*(.*)", line)
+            m = TIMESTAMP_LINE.match(line)
             if m:
-                paras.append((secs(m.group(1)), norm(m.group(2))))
+                paras.append([secs(m.group(1)), m.group(2)])
+            elif paras:  # text below its timestamp belongs to that paragraph
+                paras[-1][1] += " " + line
         if paras:
-            sources[key] = ("timed", paras)
+            sources[key] = ("timed", [(t, norm(words)) for t, words in paras])
             continue
         pages, current = {}, None
         for line in text.splitlines():
@@ -115,6 +130,8 @@ def load_sources(root):
 def check_quote(text, key, position, sources):
     """Return (error or None, warning or None, cut gaps)."""
     pieces = [norm(p) for p in re.split(r"\.\.\.|…", text) if norm(p)]
+    if not pieces:
+        return "the quote has no words to check", None, []
     if len(pieces) > 1 and any(len(p.split()) < 2 for p in pieces):
         return "a piece of a cut quote is too short to verify", None, []
     kind, data = sources[key]
@@ -155,10 +172,22 @@ def body_of(text):
     return text
 
 
+def script_of(phrase):
+    for c in phrase:
+        name = unicodedata.name(c, "")
+        if name.startswith(("HEBREW", "ARABIC")):
+            return name.split()[0].lower()
+        if c.isalpha():
+            return None
+    return None
+
+
 def keep_out_patterns(root):
+    """Whole-word patterns, matched against text with its marks stripped."""
     path = root / "_meta" / "keep-out.txt"
-    lines = (x.strip() for x in path.read_text(encoding="utf-8-sig").splitlines()) if path.exists() else ()
-    return [re.compile(r"(?<!\w)" + re.escape(p) + r"(?!\w)", re.I) for p in lines if p and not p.startswith("#")]
+    lines = (strip_marks(x.strip()) for x in path.read_text(encoding="utf-8-sig").splitlines()) if path.exists() else ()
+    return [re.compile(r"(?<!\w)" + PREFIXES.get(script_of(p), "") + re.escape(p) + r"(?!\w)", re.I)
+            for p in lines if p and not p.startswith("#")]
 
 
 def check_words_sections(rel, body, sources):
@@ -184,7 +213,7 @@ def main():
     for f in files:
         rel = f.relative_to(root).as_posix()
         text = f.read_text(encoding="utf-8-sig", errors="replace")
-        if any(p.search(text) for p in keep_out):  # every file, frontmatter included
+        if keep_out and any(p.search(strip_marks(text)) for p in keep_out):  # every file, frontmatter included
             problems.append(f"{rel}: contains a phrase from _meta/keep-out.txt")
         if f.name.lower() in NOT_NOTES:
             continue

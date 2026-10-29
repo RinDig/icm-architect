@@ -1,5 +1,6 @@
 # One phrase per line. Plain text, case-insensitive, whole words.
 # Matching is whole-word, so list each form of a word: budget and budgets, layoff and layoffs.
+# Hebrew and Arabic phrases also match with a prefix attached (לדני, ודני; لسمير), and vowel marks are ignored.
 # _tools/quotes.py fails on a hit anywhere in the bundle outside sources/raw/ and _meta/,
 # frontmatter, indexes and entry files included. It cannot catch synonyms.
 # Put names here, and anything the speaker asked to keep out of every artifact.

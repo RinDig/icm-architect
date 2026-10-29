@@ -7,16 +7,18 @@ ROOT defaults to the folder that holds _tools/. Standard library only.
 
 Checks every .md file outside dot-folders, node_modules/, _archive/, _templates/, raw/ and any
 folder named with --skip:
-  - markdown links [text](path), .md paths in consumes: / produces: frontmatter, and import
-    lines such as @AGENTS.md (the one-line pointers CLAUDE.md and GEMINI.md hold).
-    Web links, #anchors, {placeholders} and [[wikilinks]] are not checked.
+  - markdown links [text](path "title"), reference definitions [ref]: path, .md paths in
+    consumes: / produces: frontmatter (inline or as a - list), and import lines such as
+    @AGENTS.md (the one-line pointers CLAUDE.md and GEMINI.md hold).
+    Web links, #anchors, {placeholders}, [[wikilinks]] and links shown in `inline code` are not checked.
   - backticked paths in list items under an Inputs heading, relative to the file or to ROOT.
     A reference (every-run) input must exist; any other input passes if its folder exists,
     since this run's output may not be made yet.
 Fenced code blocks are skipped.
 
 --graph FILE also writes the graph it walked, one JSON object per line: first the root (relative
-to FILE), then each file (path, type, title, description, tags) and each link between .md files.
+to FILE), then each file (path, type, title, description, tags, access_tier) and each link between
+.md files.
 viz.py draws it.
 """
 import json
@@ -32,10 +34,11 @@ except Exception:
     pass
 
 SKIP = {"node_modules", "_archive", "_templates", "raw"}
-LINK = re.compile(r"\[[^\]]*\]\((<[^>]+>|[^)\s]+)\)")
+LINK = re.compile(r"""\[[^\]]*\]\((<[^>]+>|[^)\s]+)(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*\)""")
+REF_DEF = re.compile(r"^\s{0,3}\[([^\]^][^\]]*)\]:\s*(<[^>]+>|\S+)")  # [ref]: path; [^1]: is a footnote
+CODE_SPAN = re.compile(r"(`+)(.+?)\1")
 TICK = re.compile(r"`([^`\s]+)`")
 HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
-LINK_KEYS = re.compile(r"^(?:consumes|produces):\s*(.+)$", re.M)
 IMPORT = re.compile(r"^@(\S+\.md)\s*$")
 
 
@@ -48,10 +51,23 @@ def front_matter(text):
 
 
 def field(front, name):
-    m = re.search(rf"^{name}:\s*(.+)$", front, re.M)
-    if not m:
+    """One frontmatter value as one line: plain or quoted, a > or | block, or a - list joined by ', '."""
+    lines = front.splitlines()
+    for i, line in enumerate(lines):
+        m = re.match(rf"{name}:(?:[ \t]+(.*))?$", line)
+        if m:
+            break
+    else:
         return ""
-    v = m.group(1).strip()
+    v = (m.group(1) or "").strip()
+    below = []
+    for line in lines[i + 1:]:
+        if line.strip() and not line[:1].isspace():
+            break
+        below.append(line.strip())
+    if v in ("", ">", "|", ">-", "|-", ">+", "|+"):
+        items = [x[2:].strip() if x.startswith("- ") else x for x in below if x]
+        return (", " if v == "" and below and below[0].startswith("- ") else " ").join(items)
     if v[:1] not in "\"'":
         v = re.split(r"\s+#", v, maxsplit=1)[0]  # drop a YAML comment
     if len(v) > 1 and v[0] == v[-1] == '"':
@@ -113,8 +129,8 @@ def main():
     for f in files:
         rel = f.relative_to(root).as_posix()
         front, body = front_matter(f.read_text(encoding="utf-8-sig", errors="replace"))
-        for m in LINK_KEYS.finditer(front):
-            for target in re.findall(r"[^\s\[\],\"']+\.md\b", m.group(1)):
+        for key in ("consumes", "produces"):
+            for target in re.findall(r"[^\s\[\],\"']+\.md\b", field(front, key)):
                 link(f, rel, target)
         title = field(front, "title")
         in_inputs = False
@@ -127,8 +143,13 @@ def main():
             imp = IMPORT.match(line.strip())
             if imp and not re.match(r"^(~|/|[A-Za-z]:)", imp.group(1)):  # home or absolute paths aren't the tree's
                 link(f, rel, imp.group(1))
-            for m in LINK.finditer(line):
-                link(f, rel, m.group(1)[1:-1] if m.group(1).startswith("<") else m.group(1))
+            prose = CODE_SPAN.sub("", line)  # a link shown in `code` is an example, not a link
+            targets = [m.group(1) for m in LINK.finditer(prose)]
+            ref = REF_DEF.match(prose)
+            if ref:
+                targets.append(ref.group(2))
+            for target in targets:
+                link(f, rel, target[1:-1] if target.startswith("<") else target)
             if in_inputs and re.match(r"\s*[-*]\s", line):
                 strict = "reference" in line.lower()  # every-run inputs must already exist
                 for m in TICK.finditer(line):
@@ -140,7 +161,8 @@ def main():
                     if not any(h.exists() or (not strict and h.parent.is_dir()) for h in hits):
                         broken.append(f"{rel}: input `{p}`")
         nodes.append({"node": rel, "type": field(front, "type"), "title": title or f.stem,
-                      "description": field(front, "description"), "tags": field(front, "tags")})
+                      "description": field(front, "description"), "tags": field(front, "tags"),
+                      "access_tier": field(front, "access_tier")})
 
     if graph_out:
         try:
