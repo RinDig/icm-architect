@@ -13,7 +13,8 @@ folder named with --skip:
   - backticked paths in list items under an Inputs heading, relative to the file or to ROOT.
     A reference (every-run) input must exist; any other input passes if its folder exists,
     since this run's output may not be made yet.
-Fenced code blocks are skipped.
+Fenced code blocks are skipped. Inside a git repository, untracked files that git ignores are
+left out too.
 
 --graph FILE also writes the graph it walked, one JSON object per line: first the root (relative
 to FILE), then each file (path, type, title, description, tags) and each link between .md files.
@@ -22,6 +23,7 @@ viz.py draws it.
 import json
 import os
 import re
+import subprocess
 import sys
 import urllib.parse
 from pathlib import Path
@@ -74,6 +76,21 @@ def lines_outside_fences(body):
             yield line
 
 
+def git_ignored(root, files):
+    """The files git ignores and does not track. Empty outside a git repository or without git."""
+    if not files:
+        return set()
+    names = "\0".join(f.relative_to(root).as_posix() for f in files) + "\0"
+    try:
+        r = subprocess.run(["git", "-C", str(root), "check-ignore", "-z", "--stdin"],
+                           input=names.encode("utf-8"), capture_output=True)
+    except OSError:  # git not installed
+        return set()
+    if r.returncode not in (0, 1):  # 128: not a git repository
+        return set()
+    return {root / n for n in r.stdout.decode("utf-8").split("\0") if n}
+
+
 def looks_like_path(s):
     if any(c in s for c in "{}<>*?|") or re.match(r"^[a-z]+:", s):
         return False
@@ -94,6 +111,8 @@ def main():
 
     files = sorted(f for f in root.rglob("*.md")
                    if not any(p.startswith(".") or p in skip for p in f.relative_to(root).parts[:-1]))
+    ignored = git_ignored(root, files)
+    files = [f for f in files if f not in ignored]
     broken, nodes, edges, checked = [], [], [], 0
 
     def link(f, rel, target):
