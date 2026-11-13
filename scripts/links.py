@@ -5,15 +5,16 @@ Copy to _tools/ in a workspace and run from anywhere:
     python -I _tools/links.py [ROOT] [--skip FOLDER ...] [--graph FILE]
 ROOT defaults to the folder that holds _tools/. Standard library only.
 
-Checks every .md file outside dot-folders, node_modules/, _archive/, _templates/, raw/, any
-folder named with --skip, and, inside a git repository, any untracked file git ignores:
+Checks every .md file outside dot-folders, node_modules/, _archive/, _templates/, raw/ and any
+folder named with --skip:
   - markdown links [text](path), .md paths in consumes: / produces: frontmatter, and import
     lines such as @AGENTS.md (the one-line pointers CLAUDE.md and GEMINI.md hold).
     Web links, #anchors, {placeholders} and [[wikilinks]] are not checked.
   - backticked paths in list items under an Inputs heading, relative to the file or to ROOT.
     A reference (every-run) input must exist; any other input passes if its folder exists,
     since this run's output may not be made yet.
-Fenced code blocks are skipped.
+Fenced code blocks are skipped. Inside a git repository, untracked files that git ignores are
+left out too.
 
 --graph FILE also writes the graph it walked, one JSON object per line: first the root (relative
 to FILE), then each file (path, type, title, description, tags) and each link between .md files.
