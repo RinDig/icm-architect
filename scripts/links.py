@@ -5,8 +5,8 @@ Copy to _tools/ in a workspace and run from anywhere:
     python -I _tools/links.py [ROOT] [--skip FOLDER ...] [--graph FILE]
 ROOT defaults to the folder that holds _tools/. Standard library only.
 
-Checks every .md file outside dot-folders, node_modules/, _archive/, _templates/, raw/ and any
-folder named with --skip:
+Checks every .md file outside dot-folders, node_modules/, _archive/, _templates/, raw/, any
+folder named with --skip, and, inside a git repository, any untracked file git ignores:
   - markdown links [text](path), .md paths in consumes: / produces: frontmatter, and import
     lines such as @AGENTS.md (the one-line pointers CLAUDE.md and GEMINI.md hold).
     Web links, #anchors, {placeholders} and [[wikilinks]] are not checked.
@@ -22,6 +22,7 @@ viz.py draws it.
 import json
 import os
 import re
+import subprocess
 import sys
 import urllib.parse
 from pathlib import Path
@@ -74,6 +75,21 @@ def lines_outside_fences(body):
             yield line
 
 
+def git_ignored(root, files):
+    """The files git ignores and does not track. Empty outside a git repository or without git."""
+    if not files:
+        return set()
+    names = "\0".join(f.relative_to(root).as_posix() for f in files) + "\0"
+    try:
+        r = subprocess.run(["git", "-C", str(root), "check-ignore", "-z", "--stdin"],
+                           input=names.encode("utf-8"), capture_output=True)
+    except OSError:  # git not installed
+        return set()
+    if r.returncode not in (0, 1):  # 128: not a git repository
+        return set()
+    return {root / n for n in r.stdout.decode("utf-8").split("\0") if n}
+
+
 def looks_like_path(s):
     if any(c in s for c in "{}<>*?|") or re.match(r"^[a-z]+:", s):
         return False
@@ -94,6 +110,8 @@ def main():
 
     files = sorted(f for f in root.rglob("*.md")
                    if not any(p.startswith(".") or p in skip for p in f.relative_to(root).parts[:-1]))
+    ignored = git_ignored(root, files)
+    files = [f for f in files if f not in ignored]
     broken, nodes, edges, checked = [], [], [], 0
 
     def link(f, rel, target):
