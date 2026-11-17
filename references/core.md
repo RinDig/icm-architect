@@ -47,7 +47,7 @@ Do NOT load: other stages' references, earlier runs, the whole `_shared/` folder
 A person reads the draft aloud and confirms the argument order survived from research. Edit in place; the next stage reads whatever is here.
 ```
 
-Rules: inputs are exact backticked paths, split working vs reference. The process is numbered and short; constraints live in L3 files, not restated here, and a step that is code names its command. Commands run from the workspace root and say `python`; use `python3` or `py` where that is the name. Exactly one check, stated as something a person, a script or a small model does, never a vague "review". A check that isn't a person writes `check.md` beside the output, first line `pass` or `fail: <why>`.
+Rules: inputs are exact backticked paths, split working vs reference. The process is numbered and short; constraints live in L3 files, not restated here, and a step that is code names its command. Commands run from the workspace root and say `python`; use `python3` or `py` where that is the name. Exactly one check, stated as something a person, a script or a small model does, never a vague "review". A check that isn't a person writes `check.md` beside the output, first line `pass` or `fail: <why>`. That first line is the verdict and nothing else, so a script can gate on it exactly (`head -n 1 check.md` is `pass`, not `pass (…)`); who or what judged, and on what evidence, goes on the lines below.
 
 ## Naming
 
