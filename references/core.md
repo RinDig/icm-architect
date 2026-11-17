@@ -64,7 +64,7 @@ Rules: inputs are exact backticked paths, split working vs reference. The proces
 - **One home per fact; a link beats a copy.** Duplication is how structures rot.
 - **Generated indexes are never hand-edited.** An index built from frontmatter by a script (`_tools/index.py`) cannot drift; a hand-curated one always does.
 - **The structure is the documentation.** If something needs explaining, the explanation goes in that folder's `CONTEXT.md`, not in a wiki elsewhere and not in anyone's head. A new collaborator should understand the pipeline by reading the CONTEXT files top to bottom, without running anything.
-- **Method and instance live apart.** The blank, reusable template of a structure is a different artifact from any filled-in deployment of it. When a structure proves out, extract the template before it tangles with the data.
+- **Method and instance live apart.** The blank, reusable template of a structure is a different artifact from any filled-in deployment of it. When a structure proves out, extract the template before it tangles with the data. Copied into other repositories, see [copies.md](copies.md).
 - **Working sessions end in artifacts.** A workshop, interview, or planning call that produces only slides has failed the structure; it should end with files the structure can shelve.
 
 ## Keeping steps small
